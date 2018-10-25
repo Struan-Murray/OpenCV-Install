@@ -1,6 +1,5 @@
 ###Auto-Install for OpenCV
-###Author: Struan Murray (struansorigin@gmail.com)
-###Version: 20181025201000
+###Author: Struan Murray (https://github.com/Struan-Murray/OpenCV-Install)
 
 RED='\033[0;31m'
 GRN='\033[0;32m'
@@ -109,23 +108,47 @@ else
 	C=$((C+1))
 fi
 
-printf "${BLU}Synching opencv contrib library${ORG}\n"
-if [ -d "opencv_contrib" ]; then
-        if [ -L "opencv_contrib" ]; then
+printf "${BLU}Configuring with CMake${ORG}\n"
+cd opencv
+if [ -d "build" ]; then
+        if [ -L "build" ]; then
                 ### It is a symlink!
                 
-                rm "opencv_contrib"
-                git clone https://github.com/opencv/opencv_contrib.git
+                rm "build"
+                mkdir build
+		cd build
         else
                 ### It's a directory!
                 
-                pushd ./opencv_contrib
-                git pull
-                popd                              
+                cd build                            
         fi
 else
-        git clone https://github.com/opencv/opencv_contrib.git
+        mkdir build
+	cd build
 fi
+cmake -Wno-dev -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
+A=$?
+if [ ! $A = 0 ]; then
+	printf "${RED}Failure: $A @ $SECONDS s\n"
+	F=$((F+1))
+else
+	printf "${GRN}Complete @ $SECONDS s\n"
+	C=$((C+1))
+fi
+
+printf "${BLU}Building with make${ORG}\n"
+make -j4
+A=$?
+if [ ! $A = 0 ]; then
+	printf "${RED}Failure: $A @ $SECONDS s\n"
+	F=$((F+1))
+else
+	printf "${GRN}Complete @ $SECONDS s\n"
+	C=$((C+1))
+fi
+
+printf "${BLU}Installing libraries${ORG}\n"
+sudo make install
 A=$?
 if [ ! $A = 0 ]; then
 	printf "${RED}Failure: $A @ $SECONDS s\n"
