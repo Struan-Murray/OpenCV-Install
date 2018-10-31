@@ -25,7 +25,7 @@ fi
 
 ###Required libraries and installers
 printf "${BLU}Installing graphics libraries and installers${ORG}\n"
-sudo apt-get -qq install cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev
+sudo apt-get -qq install cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev libcanberra-gtk-module
 A=$?
 if [ ! $A = 0 ]; then
 	printf "${RED}Failure: $A @ $SECONDS s\n"
