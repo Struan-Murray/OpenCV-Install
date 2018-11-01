@@ -9,11 +9,9 @@ YEL='\033[1;33m'
 NC='\033[0m'
 C=0
 F=0
+A=0
 
-###Compiler
-printf "\n${BLU}STARTING${ORG}\n"
-printf "${BLU}Installing Compiler${ORG}\n"
-sudo apt-get -qq install build-essential
+check(){
 A=$?
 if [ ! $A = 0 ]; then
 	printf "${RED}Failure: $A @ $SECONDS s\n"
@@ -22,76 +20,61 @@ else
 	printf "${GRN}Complete @ $SECONDS s\n"
 	C=$((C+1))
 fi
+}
+
+
+###System Updates
+printf "${BLU}Updating System${ORG}\n"
+sudo apt-get update -y
+sudo apt-get upgrade -y
+check
+
+
+###Compiler
+printf "${BLU}Installing Compiler${ORG}\n"
+sudo apt-get -qq install build-essential
+check
+
 
 ###Required libraries and installers
 printf "${BLU}Installing graphics libraries and installers${ORG}\n"
 sudo apt-get -qq install cmake git libgtk2.0-dev pkg-config libavcodec-dev libavformat-dev libswscale-dev libcanberra-gtk-module
-A=$?
-if [ ! $A = 0 ]; then
-	printf "${RED}Failure: $A @ $SECONDS s\n"
-	F=$((F+1))
-else
-	printf "${GRN}Complete @ $SECONDS s\n"
-	C=$((C+1))
-fi
+check
+
 
 ###Python development
 #printf "${BLU}Installing Python development tools${ORG}\n"
 #sudo apt-get -qq install python-dev python-numpy
-#A=$?
-#if [ ! $A = 0 ]; then
-#	printf "${RED}Failure: $A @ $SECONDS s\n"
-#	F=$((F+1))
-#else
-#	printf "${GRN}Complete @ $SECONDS s\n"
-#	C=$((C+1))
-#fi
+#check
+
 
 ###Image processing libraries
 printf "${BLU}Installing Image processing libraries${ORG}\n"
 sudo apt-get -qq install libtbb2 libtbb-dev libjpeg-dev libpng-dev libtiff-dev libdc1394-22-dev 
-A=$?
-if [ ! $A = 0 ]; then
-	printf "${RED}Failure: $A @ $SECONDS s\n"
-	F=$((F+1))
-else
-	printf "${GRN}Complete @ $SECONDS s\n"
-	C=$((C+1))
-fi
+check
+
 
 ###Suspect Libraries
 #printf "${BLU}Installing Suspect libraries${RED}\n"
 #sudo apt-get -qq install libjasper-dev
-#A=$?
-#if [ ! $A = 0 ]; then
-#	printf "${RED}Failure: $A @ $SECONDS s\n"
-#	F=$((F+1))
-#else
-#	printf "${GRN}Complete @ $SECONDS s\n"
-#	C=$((C+1))
-#fi
+#check
 
+
+###Cleaning Libraries
 printf "${BLU}Removing redundant dependencies${ORG}\n"
 sudo apt-get -qq autoremove
-A=$?
-if [ ! $A = 0 ]; then
-	printf "${RED}Failure: $A @ $SECONDS s\n"
-	F=$((F+1))
-else
-	printf "${GRN}Complete @ $SECONDS s\n"
-	C=$((C+1))
-fi
+sudo apt-get -qq autoclean
+check
 
-printf "\n${BLU}Synching opencv base-code${ORG}\n"
+
+###Getting latest release of OpenCV
+printf "\n${BLU}Synching OpenCV base-code${ORG}\n"
 if [ -d opencv ]; then 
 	if [ -L opencv ]; then
-		### It's a symlink!
 		
 		rm opencv
 		git clone https://github.com/opencv/opencv.git
-	else
-		### It's a directory!
-		
+	else		
 		pushd ./opencv
 		git pull
 		popd
@@ -99,15 +82,10 @@ if [ -d opencv ]; then
 else
 	git clone https://github.com/opencv/opencv.git
 fi
-A=$?
-if [ ! $A = 0 ]; then
-	printf "${RED}Failure: $A @ $SECONDS s\n"
-	F=$((F+1))
-else
-	printf "${GRN}Complete @ $SECONDS s\n"
-	C=$((C+1))
-fi
+check
 
+
+###Creating build directory and configuring makefiles
 printf "${BLU}Configuring with CMake${ORG}\n"
 cd opencv
 if [ -d "build" ]; then
@@ -127,36 +105,27 @@ else
 	cd build
 fi
 cmake -Wno-dev -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_PREFIX=/usr/local ..
-A=$?
-if [ ! $A = 0 ]; then
-	printf "${RED}Failure: $A @ $SECONDS s\n"
-	F=$((F+1))
-else
-	printf "${GRN}Complete @ $SECONDS s\n"
-	C=$((C+1))
-fi
+check
 
+
+###Building OpenCV
 printf "${BLU}Building with make${ORG}\n"
 make -j4
-A=$?
-if [ ! $A = 0 ]; then
-	printf "${RED}Failure: $A @ $SECONDS s\n"
-	F=$((F+1))
-else
-	printf "${GRN}Complete @ $SECONDS s\n"
-	C=$((C+1))
-fi
+check
 
+
+###Moving libraries
 printf "${BLU}Installing libraries${ORG}\n"
 sudo make install
-A=$?
-if [ ! $A = 0 ]; then
-	printf "${RED}Failure: $A @ $SECONDS s\n"
-	F=$((F+1))
-else
-	printf "${GRN}Complete @ $SECONDS s\n"
-	C=$((C+1))
-fi
+check
 
+
+###Updating library references
+printf "${BLU}Updating library references${ORG}\n"
+sudo ldconfig
+check
+
+
+###Summarising bash script
 T=$((C+F))
 printf "\n${NC}Install Finished with:\n${GRN}$C Completed Succesfully & \n${RED}$F Failed \n${NC}Out of $T processes in $SECONDS s.\n\n"
